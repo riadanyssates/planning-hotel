@@ -27,4 +27,4 @@ Application de planning hôtel créée avec Next.js 15 + React 19 + @libsql/clie
 
 ## Déploiement
 Production : Turso (SQLite compatible) + Vercel
-Variables d'env requises : MANAGER_PASSWORD, JWT_SECRET, LIBSQL_URL, LIBSQL_AUTH_TOKEN
+Variables d'env requises : MANAGER_PASSWORD, JWT_SECRET, TURSO_DATABASE_URL, TURSO_AUTH_TOKEN

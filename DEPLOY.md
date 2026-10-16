@@ -49,8 +49,8 @@ turso db tokens create planning-hotel
    |---|---|
    | `MANAGER_PASSWORD` | votre-mot-de-passe |
    | `JWT_SECRET` | une-chaine-aleatoire-longue |
-   | `LIBSQL_URL` | `libsql://planning-hotel-xxx.turso.io` |
-   | `LIBSQL_AUTH_TOKEN` | le token turso copié ci-dessus |
+   | `TURSO_DATABASE_URL` | `libsql://planning-hotel-xxx.turso.io` |
+   | `TURSO_AUTH_TOKEN` | le token turso copié ci-dessus |
 
 4. Cliquez **Deploy** → l'app est en ligne !
 
@@ -63,8 +63,8 @@ vercel
 # Puis configurer les variables :
 vercel env add MANAGER_PASSWORD
 vercel env add JWT_SECRET
-vercel env add LIBSQL_URL
-vercel env add LIBSQL_AUTH_TOKEN
+vercel env add TURSO_DATABASE_URL
+vercel env add TURSO_AUTH_TOKEN
 
 # Re-déployer avec les variables
 vercel --prod

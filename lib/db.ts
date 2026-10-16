@@ -8,8 +8,8 @@ declare global {
 export function getClient(): Client {
   if (!global.__dbClient) {
     global.__dbClient = createClient({
-      url: process.env.LIBSQL_URL || 'file:local.db',
-      authToken: process.env.LIBSQL_AUTH_TOKEN,
+      url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+      authToken: process.env.TURSO_AUTH_TOKEN,
     });
   }
   return global.__dbClient;
