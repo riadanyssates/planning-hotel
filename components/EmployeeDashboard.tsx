@@ -6,6 +6,7 @@ import DayTimeline from './DayTimeline';
 import RestDaysCalendar from './RestDaysCalendar';
 import EmployeePlanning from './EmployeePlanning';
 import ReceptionPlanning from './ReceptionPlanning';
+import LateAlertsSetup from './LateAlertsSetup';
 import type { Employee } from '@/types';
 import clsx from 'clsx';
 import { moroccoNow } from '@/lib/morocco-time';
@@ -108,6 +109,7 @@ export default function EmployeeDashboard({ token }: { token: string }) {
 
       {/* Content */}
       <div className="flex-1">
+        <LateAlertsSetup token={token} />
         {view === 'week'      && <WeekCalendar    readOnly fetchToken={token} department={department || undefined} />}
         {view === 'day'       && <DayTimeline              fetchToken={token} department={department || undefined} />}
         {view === 'rest'      && <RestDaysCalendar         fetchToken={token} department={department || undefined} />}

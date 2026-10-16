@@ -1,6 +1,17 @@
 import { getDb } from '@/lib/db';
 import EmployeeDashboard from '@/components/EmployeeDashboard';
 import AdminLoginRedirect from '@/components/AdminLoginRedirect';
+import type { Metadata } from 'next';
+
+// Manifeste par employé : « Ajouter à l'écran d'accueil » ouvre son planning (requis pour les notifications sur iPhone)
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  return {
+    manifest: `/api/employee/${token}/manifest`,
+    appleWebApp: { capable: true, title: 'Anyssates', statusBarStyle: 'default' },
+    icons: { apple: '/logo-riad.png' },
+  };
+}
 
 export default async function PlanningPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

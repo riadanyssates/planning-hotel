@@ -6,7 +6,7 @@ import { fr } from 'date-fns/locale';
 
 interface Notification {
   id: number;
-  type: 'leave_request' | 'timeclock';
+  type: 'leave_request' | 'timeclock' | 'late';
   employee_name: string;
   message: string;
   read_at: string | null;
@@ -55,7 +55,7 @@ export default function NotificationBell() {
     try { return format(new Date(iso), 'd MMM HH:mm', { locale: fr }); } catch { return ''; }
   }
 
-  const icon = (type: string) => type === 'leave_request' ? '📋' : '🕐';
+  const icon = (type: string) => type === 'leave_request' ? '📋' : type === 'late' ? '⏰' : '🕐';
 
   return (
     <div className="relative" ref={ref}>
