@@ -11,5 +11,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
   }
   const alerts = await checkLateArrivals();
+  console.log(`late-check: ${alerts.length} rappel(s)`, alerts.map(a => `${a.employee} ${a.type} ${a.scheduled}`));
   return NextResponse.json({ ok: true, alerts });
 }
