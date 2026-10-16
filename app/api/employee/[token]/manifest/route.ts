@@ -13,9 +13,12 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
       start_url: `/planning/${token}`,
       scope: '/',
       display: 'standalone',
-      background_color: '#f8fafc',
-      theme_color: '#8fbca8',
-      icons: [{ src: '/logo-riad.png', sizes: '200x200', type: 'image/png' }],
+      background_color: '#24403e',
+      theme_color: '#24403e',
+      icons: [
+        { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
     },
     { headers: { 'Content-Type': 'application/manifest+json' } }
   );

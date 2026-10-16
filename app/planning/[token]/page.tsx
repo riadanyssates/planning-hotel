@@ -9,7 +9,6 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   return {
     manifest: `/api/employee/${token}/manifest`,
     appleWebApp: { capable: true, title: 'Anyssates', statusBarStyle: 'default' },
-    icons: { apple: '/logo-riad.png' },
   };
 }
 

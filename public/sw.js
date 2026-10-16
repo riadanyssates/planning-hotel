@@ -8,7 +8,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'Riad Anyssates', {
       body: data.body || '',
-      icon: '/logo-riad.png',
+      icon: '/icon-192.png',
       badge: '/logo-riad.png',
       tag: data.tag,
       renotify: true,
