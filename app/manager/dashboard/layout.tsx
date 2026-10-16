@@ -4,6 +4,7 @@ import { getManagerSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import LogoutButton from '@/components/LogoutButton';
 import NotificationBell from '@/components/NotificationBell';
+import DbMigrationPanel from '@/components/DbMigrationPanel';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getManagerSession();
@@ -45,7 +46,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </nav>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <DbMigrationPanel />
+        {children}
+      </main>
     </div>
   );
 }
