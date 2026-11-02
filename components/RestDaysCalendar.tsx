@@ -8,6 +8,7 @@ import type { EmployeeMonthRow } from '@/lib/schedule';
 import clsx from 'clsx';
 import { openPrintWindow } from '@/lib/print';
 import { moroccoNow } from '@/lib/morocco-time';
+import DayStatusModal from './DayStatusModal';
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -68,9 +69,12 @@ export default function RestDaysCalendar({ department, fetchToken }: { departmen
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-based
   const [rows, setRows] = useState<EmployeeMonthRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // responsables : une case cliquée ouvre la fenêtre pour changer ce jour (pas dans la vue employé)
+  const canEdit = !fetchToken;
+  const [editing, setEditing] = useState<{ employee: Employee; date: string; day: DaySchedule | undefined } | null>(null);
 
-  const fetchMonth = useCallback(async (y: number, m: number) => {
-    setLoading(true);
+  const fetchMonth = useCallback(async (y: number, m: number, silent = false) => {
+    if (!silent) setLoading(true);
     const tp = fetchToken ? `&employeeToken=${fetchToken}` : '';
     const res = await fetch(`/api/planning/month?year=${y}&month=${m}${tp}`);
     if (res.ok) setRows(await res.json());
@@ -340,18 +344,23 @@ export default function RestDaysCalendar({ department, fetchToken }: { departmen
                       const day: DaySchedule | undefined = row.days[dateStr];
                       const isLeave = day?.is_leave ?? false;
                       const isRest = !isLeave && (!day || day.is_off);
+                      const isOther = isRest && !!day?.is_exception && !!day?.note;
 
                       return (
                         <td
                           key={num}
                           className={clsx(
                             'p-0 h-8',
+                            canEdit && 'cursor-pointer hover:outline hover:outline-2 hover:outline-slate-400 hover:-outline-offset-2',
                             isToday && 'ring-1 ring-inset ring-taupe-light',
                             dow === 5 && 'border-l-2 border-slate-300'
                           )}
                           style={dow === 5 ? { borderRight: 'none' } : dow === 6 ? { borderRight: '2px solid #cbd5e1' } : undefined}
+                          onClick={canEdit ? () => setEditing({ employee: row.employee, date: dateStr, day }) : undefined}
                           title={isLeave
-                            ? `${row.employee.name} — congés payés`
+                            ? `${row.employee.name} — ${day?.leave_type === 'cm' ? 'congé maladie' : 'congés payés'}`
+                            : isOther
+                            ? `${row.employee.name} — ${day?.note}`
                             : isRest
                             ? `${row.employee.name} — repos`
                             : `${row.employee.name} — ${day?.start_time?.slice(0, 5)}–${day?.end_time?.slice(0, 5)}`}
@@ -368,9 +377,11 @@ export default function RestDaysCalendar({ department, fetchToken }: { departmen
                             </div>
                           ) : isRest ? (
                             <div
-                              className="w-full h-full"
+                              className="w-full h-full flex items-center justify-center"
                               style={{ backgroundColor: saturate(row.employee.color) }}
-                            />
+                            >
+                              {isOther && <span className="text-[8px] font-bold text-slate-700">{(day?.note || '').slice(0, 3)}</span>}
+                            </div>
                           ) : (
                             <div className="w-full h-full" />
                           )}
@@ -468,6 +479,14 @@ export default function RestDaysCalendar({ department, fetchToken }: { departmen
           </table>
         </div>
       </div>
+      {editing && (
+        <DayStatusModal
+          employee={editing.employee}
+          date={editing.date}
+          day={editing.day}
+          onClose={changed => { setEditing(null); if (changed) fetchMonth(year, month, true); }}
+        />
+      )}
     </div>
   );
 }
