@@ -7,6 +7,7 @@ import RestDaysCalendar from './RestDaysCalendar';
 import EmployeePlanning from './EmployeePlanning';
 import ReceptionPlanning from './ReceptionPlanning';
 import LateAlertsSetup from './LateAlertsSetup';
+import EmployeeGuide from './EmployeeGuide';
 import type { Employee } from '@/types';
 import clsx from 'clsx';
 import { moroccoNow } from '@/lib/morocco-time';
@@ -70,6 +71,7 @@ export default function EmployeeDashboard({ token }: { token: string }) {
               <span className="text-sm text-slate-300">{employee.name}</span>
             </>
           )}
+          <EmployeeGuide />
         </div>
       </header>
 
