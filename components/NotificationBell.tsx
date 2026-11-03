@@ -16,11 +16,23 @@ interface Notification {
 export default function NotificationBell() {
   const [notifs, setNotifs] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  // employés en retard aujourd'hui (pastille rouge, reste affichée toute la journée)
+  const [lateToday, setLateToday] = useState<string[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
   async function fetchNotifs() {
     const res = await fetch('/api/notifications?all=1');
     if (res.ok) setNotifs(await res.json());
+    const lr = await fetch('/api/notifications?late=1').catch(() => null);
+    if (lr && lr.ok) {
+      const rows = await lr.json() as { employee_name: string; created_at: string }[];
+      const today = format(new Date(), 'yyyy-MM-dd');
+      // created_at est en UTC (« AAAA-MM-JJ HH:MM:SS ») : on le ramène à la date locale du téléphone
+      const names = rows
+        .filter(r => format(new Date(r.created_at.replace(' ', 'T') + 'Z'), 'yyyy-MM-dd') === today)
+        .map(r => r.employee_name);
+      setLateToday(Array.from(new Set(names)));
+    }
   }
 
   useEffect(() => {
@@ -68,8 +80,19 @@ export default function NotificationBell() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
+        {lateToday.length > 0 && (
+          <span
+            className="absolute -top-1 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white"
+            title={`En retard aujourd'hui : ${lateToday.join(', ')}`}
+          >
+            {lateToday.length}
+          </span>
+        )}
         {unread.length > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+          <span
+            className={`absolute w-4 h-4 bg-white text-celadon-700 text-[9px] font-bold rounded-full flex items-center justify-center ${lateToday.length > 0 ? '-bottom-1 -right-1' : '-top-0.5 -right-0.5'}`}
+            title="Notifications non lues"
+          >
             {unread.length > 9 ? '9+' : unread.length}
           </span>
         )}
@@ -79,7 +102,10 @@ export default function NotificationBell() {
         <div className="fixed sm:absolute top-24 sm:top-full left-1/2 sm:left-auto -translate-x-1/2 sm:translate-x-0 sm:right-0 sm:mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
           <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <span className="text-sm font-semibold text-slate-700">Notifications</span>
-            {notifs.length > 0 && (
+            {lateToday.length > 0 && (
+              <span className="text-xs font-semibold text-red-600 whitespace-nowrap">⏰ {lateToday.length} en retard</span>
+            )}
+            {notifs.length > 0 && lateToday.length === 0 && (
               <span className="text-xs text-slate-400">{notifs.length} au total</span>
             )}
           </div>
