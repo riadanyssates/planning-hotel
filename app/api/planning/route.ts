@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { getManagerSession } from '@/lib/auth';
+import { teamAccess, hiddenFromPlanningSql } from '@/lib/team-access';
 import { getWeekSchedules, getMonthStats } from '@/lib/schedule';
 import { startOfWeek } from 'date-fns';
 import type { Employee } from '@/types';
 
-async function checkAuth(req: NextRequest): Promise<boolean> {
-  const session = await getManagerSession();
-  if (session) return true;
-  const { searchParams } = new URL(req.url);
-  const empToken = searchParams.get('employeeToken');
-  if (!empToken) return false;
-  const db = await getDb();
-  const r = await db.execute({ sql: 'SELECT id FROM employees WHERE access_token = ?', args: [empToken] });
-  return r.rows.length > 0;
-}
 
 // GET /api/planning?startDate=YYYY-MM-DD  → week schedule for all employees
 // GET /api/planning?year=2024&month=1     → monthly stats
 export async function GET(req: NextRequest) {
-  if (!(await checkAuth(req))) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  const access = await teamAccess(req);
+  if (!access) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
   const db = await getDb();
   const { searchParams } = new URL(req.url);
@@ -35,7 +26,7 @@ export async function GET(req: NextRequest) {
     const mStart = fmt(ms, 'yyyy-MM-dd');
     const mEnd   = fmt(me, 'yyyy-MM-dd');
     const empRes = await db.execute({
-      sql: `SELECT * FROM employees WHERE (contract_start IS NULL OR contract_start <= ?) AND (contract_end IS NULL OR contract_end >= ?) ORDER BY name ASC`,
+      sql: `SELECT * FROM employees WHERE (contract_start IS NULL OR contract_start <= ?) AND (contract_end IS NULL OR contract_end >= ?)${hiddenFromPlanningSql()} ORDER BY name ASC`,
       args: [mEnd, mStart],
     });
     const employees = empRes.rows as unknown as Employee[];
@@ -51,7 +42,7 @@ export async function GET(req: NextRequest) {
   const wStart = fmt(weekStart, 'yyyy-MM-dd');
   const wEnd   = fmt(addDays(weekStart, 6), 'yyyy-MM-dd');
   const empRes = await db.execute({
-    sql: `SELECT * FROM employees WHERE (contract_start IS NULL OR contract_start <= ?) AND (contract_end IS NULL OR contract_end >= ?) ORDER BY name ASC`,
+    sql: `SELECT * FROM employees WHERE (contract_start IS NULL OR contract_start <= ?) AND (contract_end IS NULL OR contract_end >= ?)${hiddenFromPlanningSql()} ORDER BY name ASC`,
     args: [wEnd, wStart],
   });
   const employees = empRes.rows as unknown as Employee[];

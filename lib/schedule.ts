@@ -29,20 +29,25 @@ export function calcTotalHours(
   s1: string | null, e1: string | null,
   s2: string | null, e2: string | null
 ): number {
-  return calcHours(s1, e1) + calcHours(s2, e2);
+  // deux créneaux = la coupure est déjà le déjeuner ; un seul créneau = on retire le déjeuner
+  if (s2 && e2) return calcHours(s1, e1) + calcHours(s2, e2);
+  return withLunchBreak(calcHours(s1, e1));
+}
+
+// Journée continue de plus de 6 h : 45 min de déjeuner retirées.
+export const LUNCH_BREAK_HOURS = 0.75;
+export const LUNCH_BREAK_MIN_SESSION_HOURS = 6;
+export function withLunchBreak(span: number): number {
+  return span > LUNCH_BREAK_MIN_SESSION_HOURS ? span - LUNCH_BREAK_HOURS : span;
 }
  
 // Computes hours actually worked from up to 4 timeclock punches on a single day:
 // arrival (morning in) / departure (lunch out) / arrival2 (lunch in) / departure2 (evening out).
 // - If both lunch punches are present: sum of (departure-arrival) + (departure2-arrival2).
 // - Otherwise (no lunch break punched): single continuous session from arrival to
-//   whichever of departure2/departure is the latest available end punch, minus a
-//   default lunch break (LUNCH_BREAK_HOURS) when that session is longer than
-//   LUNCH_BREAK_MIN_SESSION_HOURS.
+//   whichever of departure2/departure is the latest available end punch, minus
+//   45 min of lunch (withLunchBreak) when that session is longer than 6 h.
 // - If no end punch is available yet (still clocked in), returns 0.
-export const LUNCH_BREAK_HOURS = 0.75;            // 45 min de déjeuner retirées…
-export const LUNCH_BREAK_MIN_SESSION_HOURS = 6;   // …quand la journée sans pause pointée dépasse 6 h
-
 export function computeWorkedHours(
   arrival: string | null,
   departure: string | null,
@@ -55,10 +60,7 @@ export function computeWorkedHours(
   const end = departure2 || departure;
   if (arrival && end) {
     const span = calcHours(arrival, end);
-    // on retire jusqu'à 45 min, sans jamais faire passer la journée sous 6 h
-    // (évite qu'une journée de 6h05 compte moins qu'une journée de 6 h pile)
-    if (span <= LUNCH_BREAK_MIN_SESSION_HOURS) return span;
-    return span - Math.min(LUNCH_BREAK_HOURS, span - LUNCH_BREAK_MIN_SESSION_HOURS);
+    return withLunchBreak(span);
   }
   return 0;
 }
