@@ -4,6 +4,7 @@ import { getManagerSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import LogoutButton from '@/components/LogoutButton';
 import NotificationBell from '@/components/NotificationBell';
+import ManagerGuide from '@/components/ManagerGuide';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getManagerSession();
@@ -30,6 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </nav>
             </div>
             <div className="flex items-center gap-1 shrink-0">
+              <ManagerGuide />
               <NotificationBell />
               <LogoutButton />
             </div>
