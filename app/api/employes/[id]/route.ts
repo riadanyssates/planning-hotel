@@ -7,13 +7,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!session) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
   const { id } = await params;
-  const { name, color, department, role, contract_start, contract_end } = await req.json();
+  const { name, color, department, role, contract_start, contract_end, hide_in_planning } = await req.json();
   const empRole = role === 'admin' ? 'admin' : 'employee';
   const db = await getDb();
 
   const result = await db.execute({
-    sql: 'UPDATE employees SET name = ?, color = ?, department = ?, role = ?, contract_start = ?, contract_end = ? WHERE id = ? RETURNING *',
-    args: [name, color, department || 'Gestion Clientèle', empRole, contract_start || null, contract_end || null, Number(id)],
+    sql: 'UPDATE employees SET name = ?, color = ?, department = ?, role = ?, contract_start = ?, contract_end = ?, hide_in_planning = ? WHERE id = ? RETURNING *',
+    args: [name, color, department || 'Gestion Clientèle', empRole, contract_start || null, contract_end || null, hide_in_planning ? 1 : 0, Number(id)],
   });
 
   if (result.rows.length === 0) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });

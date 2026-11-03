@@ -49,6 +49,7 @@ export default function ManagerGuide() {
                 <li>Cliquer sur un employé pour régler son <b>planning type</b> : les horaires habituels de chaque jour de la semaine.</li>
                 <li>Bouton <b>« Copier le lien »</b> : c&apos;est le lien personnel à envoyer à l&apos;employé (son planning et ses pointages). Il ne faut pas le partager à quelqu&apos;un d&apos;autre.</li>
                 <li><b>Accès administrateur</b> : donne à cet employé l&apos;accès complet, comme un responsable, par son lien.</li>
+                <li><b>Ne pas afficher dans le planning</b> : la personne n&apos;apparaît plus dans Semaine, Timeline et Repos (ni pour les employés, ni pour les responsables). Pratique pour quelqu&apos;un qui n&apos;a pas d&apos;horaires.</li>
               </ul>
             </Section>
 
@@ -69,7 +70,7 @@ export default function ManagerGuide() {
             <Section title="4. Pointages et retards">
               <ul className="list-disc pl-5 space-y-1">
                 <li><b>Pointages</b> : les 4 pointages du jour (arrivée, début et fin de pause déjeuner, départ), le prévu, le temps travaillé et le total du mois avec l&apos;écart. Un pointage fait par erreur peut être supprimé.</li>
-                <li>Sans pause déjeuner pointée, jusqu&apos;à 45 min de déjeuner sont retirées des journées de plus de 6 h.</li>
+                <li>Une journée continue de plus de 6 h compte 45 min de déjeuner en moins, au planning comme au pointage (sauf si la pause déjeuner est pointée : on retire alors la vraie pause).</li>
                 <li>Couleurs : <span className="text-green-600 font-medium">vert</span> à l&apos;heure, <span className="text-orange-500 font-medium">orange</span> léger retard, <span className="text-red-600 font-medium">rouge</span> retard.</li>
                 <li>🔔 <b>Cloche</b> : la <span className="text-red-600 font-semibold">pastille rouge</span> donne le nombre d&apos;employés en retard aujourd&apos;hui (10 min sans pointer, ou pointage avec 10 min de retard ou plus). Toucher la cloche pour voir le détail et les autres notifications (pointages, demandes de congé).</li>
               </ul>

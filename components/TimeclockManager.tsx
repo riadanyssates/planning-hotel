@@ -430,7 +430,7 @@ export default function TimeclockManager() {
                 <span className="text-red-600 font-medium">Retard (&gt;15 min)</span>
                 <span>Négatif = en avance</span>
                 <span className="text-slate-400">Les colonnes Matin / Début pause déj. / Fin pause déj. / Soir correspondent aux 4 pointages possibles</span>
-                <span className="text-slate-400">Temps travaillé : sans pause déjeuner pointée, jusqu’à 45 min de déjeuner sont retirées au-delà de 6 h</span>
+                <span className="text-slate-400">Temps travaillé : sans pause déjeuner pointée, 45 min de déjeuner sont retirées des journées de plus de 6 h</span>
               </div>
             )}
           </div>

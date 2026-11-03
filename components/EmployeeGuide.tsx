@@ -51,7 +51,7 @@ export default function EmployeeGuide() {
                 <li><b>Départ soir</b> : en partant le soir.</li>
               </ul>
               <p className="mt-1">L&apos;heure est prise automatiquement. Un pointage ne peut pas être modifié : en cas d&apos;erreur, préviens un responsable.</p>
-              <p className="mt-1">Si tu ne pointes pas la pause déjeuner, jusqu&apos;à 45 minutes de déjeuner sont retirées des journées de plus de 6 heures.</p>
+              <p className="mt-1">Si tu ne pointes pas la pause déjeuner, 45 minutes de déjeuner sont retirées des journées de plus de 6 heures.</p>
             </Section>
 
             <Section title="2. Les retards">

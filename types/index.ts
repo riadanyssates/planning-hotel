@@ -8,6 +8,7 @@ export interface Employee {
   role: EmployeeRole;
   contract_start: string | null;
   contract_end: string | null;
+  hide_in_planning?: number | null;  // 1 = n'apparaît dans aucune vue du planning
   access_token: string;
   created_at: string;
 }

@@ -154,6 +154,7 @@ async function initSchema(db: Client) {
     "ALTER TABLE reception_planning ADD COLUMN day_of_week INTEGER NOT NULL DEFAULT 0",
     "ALTER TABLE reception_planning ADD COLUMN zone TEXT NOT NULL DEFAULT 'reception'",
     "ALTER TABLE reception_closed ADD COLUMN zone TEXT NOT NULL DEFAULT 'reception'",
+    "ALTER TABLE employees ADD COLUMN hide_in_planning INTEGER NOT NULL DEFAULT 0",
   ];
   for (const sql of migrations) {
     try { await db.execute(sql); } catch { /* déjà présent */ }
