@@ -7,8 +7,16 @@ export async function GET(req: NextRequest) {
   const session = await getManagerSession();
   if (!session) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
 
-  const all = new URL(req.url).searchParams.get('all') === '1';
+  const params = new URL(req.url).searchParams;
+  const all = params.get('all') === '1';
   const db = await getDb();
+  // ?late=1 : alertes de retard des dernières 36 h (pour la pastille rouge « retards du jour » de la cloche)
+  if (params.get('late') === '1') {
+    const late = await db.execute(
+      "SELECT id, employee_name, created_at FROM notifications WHERE type = 'late' AND created_at >= datetime('now', '-36 hours') ORDER BY created_at DESC"
+    );
+    return NextResponse.json(late.rows);
+  }
   const res = await db.execute(
     all
       ? 'SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50'

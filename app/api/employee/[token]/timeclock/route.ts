@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import type { Employee } from '@/types';
 import { removeLeaveDayOnPunch, fillRestDayFromPunches } from '@/lib/leave-punch';
+import { getWeekSchedules } from '@/lib/schedule';
+import { LATE_AFTER_MIN } from '@/lib/late-check';
+
+const toMin = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
  
 type Ctx = { params: Promise<{ token: string }> };
  
@@ -80,6 +84,25 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('timeclock', ?, ?)`,
     args: [employee.name, `${employee.name} a pointé son ${typeLabel} à ${clockedAt}`],
   }).catch(() => {});
+
+  // Arrivée (ou retour de pause) pointée avec LATE_AFTER_MIN minutes de retard ou plus : alerte pour les responsables
+  if (type === 'arrival' || type === 'arrival2') {
+    try {
+      const weeks = await getWeekSchedules(new Date(date + 'T00:00:00'), [employee]);
+      const day = weeks[0]?.days[date];
+      const start = type === 'arrival' ? day?.start_time : day?.start_time2;
+      if (day && !day.is_off && !day.is_leave && start) {
+        const late = toMin(String(clockedAt).slice(0, 5)) - toMin(start.slice(0, 5));
+        if (late >= LATE_AFTER_MIN && late <= 12 * 60) {
+          const label = type === 'arrival' ? 'arrivée' : 'retour de pause';
+          await db.execute({
+            sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('late', ?, ?)`,
+            args: [employee.name, `${employee.name} a pointé son ${label} à ${clockedAt} au lieu de ${start.slice(0, 5)} — ${late} min de retard`],
+          });
+        }
+      }
+    } catch { /* le pointage reste enregistré même si le contrôle du retard échoue */ }
+  }
 
   // Pointer un jour de congé = le congé de ce jour est annulé automatiquement
   try {
