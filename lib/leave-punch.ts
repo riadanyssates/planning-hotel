@@ -73,10 +73,8 @@ export async function fillRestDayFromPunches(
   for (const r of punchRes.rows) p[String(r.type)] = String(r.clocked_at);
   if (!p.arrival) return null;
 
-  // Avec pause déjeuner pointée : deux plages. Sinon : une seule plage arrivée → départ soir.
-  const [s1, e1, s2, e2] = p.departure
-    ? [p.arrival, p.departure, p.arrival2 ?? null, p.departure2 ?? null]
-    : [p.arrival, p.departure2 ?? null, null, null];
+  // Une seule plage arrivée → départ (la pause déjeuner ne se pointe plus)
+  const [s1, e1, s2, e2] = [p.arrival, p.departure2 ?? p.departure ?? null, null, null];
 
   await db.execute({
     sql: `INSERT INTO schedule_exceptions (employee_id, date, start_time, end_time, start_time2, end_time2, note)

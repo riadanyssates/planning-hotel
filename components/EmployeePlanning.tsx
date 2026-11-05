@@ -84,8 +84,6 @@ export default function EmployeePlanning({ token, embedded = false }: { token: s
   // Timeclock state
   const todayStr = format(now, 'yyyy-MM-dd');
   const [tcArrival,    setTcArrival]    = useState<string | null>(null);
-  const [tcDeparture,  setTcDeparture]  = useState<string | null>(null);
-  const [tcArrival2,   setTcArrival2]   = useState<string | null>(null);
   const [tcDeparture2, setTcDeparture2] = useState<string | null>(null);
   const [tcLoading, setTcLoading] = useState(false);
  
@@ -108,8 +106,6 @@ export default function EmployeePlanning({ token, embedded = false }: { token: s
     if (res.ok) {
       const rows: { type: string; clocked_at: string }[] = await res.json();
       setTcArrival(rows.find(r => r.type === 'arrival')?.clocked_at    ?? null);
-      setTcDeparture(rows.find(r => r.type === 'departure')?.clocked_at ?? null);
-      setTcArrival2(rows.find(r => r.type === 'arrival2')?.clocked_at   ?? null);
       setTcDeparture2(rows.find(r => r.type === 'departure2')?.clocked_at ?? null);
     }
   }, [token, todayStr]);
@@ -256,89 +252,43 @@ export default function EmployeePlanning({ token, embedded = false }: { token: s
             Pointage — {format(now, 'd MMMM yyyy', { locale: fr })}
           </div>
  
-          {/* ── Matin ── */}
-          <div className="mb-2">
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Matin</div>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Arrivée matin */}
-              <div className="text-center">
-                {tcArrival ? (
-                  <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
-                    <div className="text-[10px] text-green-600 font-medium uppercase">Arrivée</div>
-                    <div className="text-xl font-bold text-green-700 mt-0.5">{tcArrival}</div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleTimeclock('arrival')}
-                    disabled={tcLoading}
-                    className="w-full rounded-lg bg-celadon-500 hover:bg-celadon-700 text-white px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50"
-                  >
-                    {tcLoading ? '...' : 'Arrivée'}
-                  </button>
-                )}
-              </div>
-              {/* Départ déjeuner */}
-              <div className="text-center">
-                {tcDeparture ? (
-                  <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
-                    <div className="text-[10px] text-amber-600 font-medium uppercase">Début pause déj.</div>
-                    <div className="text-xl font-bold text-amber-700 mt-0.5">{tcDeparture}</div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleTimeclock('departure')}
-                    disabled={tcLoading || !tcArrival}
-                    className="w-full rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50"
-                  >
-                    {tcLoading ? '...' : 'Début pause déj.'}
-                  </button>
-                )}
-              </div>
+          {/* Deux pointages par jour : arrivée et départ. La pause déjeuner n'est plus pointée :
+              50 min sont retirées du temps de présence des journées de plus de 6 h. */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-center">
+              {tcArrival ? (
+                <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2.5">
+                  <div className="text-[10px] text-green-600 font-medium uppercase">Arrivée</div>
+                  <div className="text-xl font-bold text-green-700 mt-0.5">{tcArrival}</div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleTimeclock('arrival')}
+                  disabled={tcLoading}
+                  className="w-full rounded-lg bg-celadon-500 hover:bg-celadon-700 text-white px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50"
+                >
+                  {tcLoading ? '...' : 'Arrivée'}
+                </button>
+              )}
+            </div>
+            <div className="text-center">
+              {tcDeparture2 ? (
+                <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5">
+                  <div className="text-[10px] text-slate-500 font-medium uppercase">Départ</div>
+                  <div className="text-xl font-bold text-slate-700 mt-0.5">{tcDeparture2}</div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleTimeclock('departure2')}
+                  disabled={tcLoading || !tcArrival}
+                  className="w-full rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50"
+                >
+                  {tcLoading ? '...' : 'Départ'}
+                </button>
+              )}
             </div>
           </div>
- 
-          {/* ── Après-midi (visible dès que departure est pointé) ── */}
-          {(tcDeparture || tcArrival2 || tcDeparture2) && (
-            <div className="mt-3 pt-3 border-t border-slate-100">
-              <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Après-midi</div>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Retour déjeuner */}
-                <div className="text-center">
-                  {tcArrival2 ? (
-                    <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2.5">
-                      <div className="text-[10px] text-blue-600 font-medium uppercase">Retour</div>
-                      <div className="text-xl font-bold text-blue-700 mt-0.5">{tcArrival2}</div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleTimeclock('arrival2')}
-                      disabled={tcLoading}
-                      className="w-full rounded-lg bg-celadon-500 hover:bg-celadon-700 text-white px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50"
-                    >
-                      {tcLoading ? '...' : 'Retour déj.'}
-                    </button>
-                  )}
-                </div>
-                {/* Départ soir */}
-                <div className="text-center">
-                  {tcDeparture2 ? (
-                    <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5">
-                      <div className="text-[10px] text-slate-500 font-medium uppercase">Départ soir</div>
-                      <div className="text-xl font-bold text-slate-700 mt-0.5">{tcDeparture2}</div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleTimeclock('departure2')}
-                      disabled={tcLoading || !tcArrival2}
-                      className="w-full rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50"
-                    >
-                      {tcLoading ? '...' : 'Départ soir'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          <p className="mt-2 text-[11px] text-slate-400 text-center">La pause déjeuner ne se pointe pas : 50 min sont déduites des journées de plus de 6 h.</p>
         </div>
  
         {/* Stats cards */}
@@ -532,8 +482,8 @@ export default function EmployeePlanning({ token, embedded = false }: { token: s
                         {format(date, 'd MMM', { locale: fr })}
                       </div>
                     </div>
-                    <div className="flex-1 grid grid-cols-4 gap-1 text-center">
-                      {[p.arrival, p.departure, p.arrival2, p.departure2].map((t, i) => (
+                    <div className="flex-1 grid grid-cols-2 gap-1 text-center">
+                      {[p.arrival, p.departure2 || p.departure].map((t, i) => (
                         <div key={i} className="text-xs">
                           {t
                             ? <span className="font-semibold text-slate-700">{t.slice(0, 5)}</span>
@@ -550,7 +500,7 @@ export default function EmployeePlanning({ token, embedded = false }: { token: s
                 );
               })}
               <div className="px-4 py-1.5 text-[10px] text-slate-400 flex gap-3">
-                <span>Arrivée</span><span>Début pause</span><span>Retour pause</span><span>Départ</span>
+                <span>Arrivée</span><span>Départ</span><span>· 50 min de déjeuner déduites au-delà de 6 h</span>
               </div>
             </div>
           );

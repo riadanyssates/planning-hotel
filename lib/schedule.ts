@@ -34,29 +34,24 @@ export function calcTotalHours(
   return withLunchBreak(calcHours(s1, e1));
 }
 
-// Journée continue de plus de 6 h : 45 min de déjeuner retirées.
-export const LUNCH_BREAK_HOURS = 0.75;
+// Journée de plus de 6 h : 50 min de déjeuner retirées (les journées courtes, 5 h par exemple, ne perdent rien).
+export const LUNCH_BREAK_HOURS = 50 / 60;
 export const LUNCH_BREAK_MIN_SESSION_HOURS = 6;
 export function withLunchBreak(span: number): number {
   return span > LUNCH_BREAK_MIN_SESSION_HOURS ? span - LUNCH_BREAK_HOURS : span;
 }
  
-// Computes hours actually worked from up to 4 timeclock punches on a single day:
-// arrival (morning in) / departure (lunch out) / arrival2 (lunch in) / departure2 (evening out).
-// - If both lunch punches are present: sum of (departure-arrival) + (departure2-arrival2).
-// - Otherwise (no lunch break punched): single continuous session from arrival to
-//   whichever of departure2/departure is the latest available end punch, minus
-//   45 min of lunch (withLunchBreak) when that session is longer than 6 h.
-// - If no end punch is available yet (still clocked in), returns 0.
+// Temps travaillé d'une journée : présence de l'arrivée (arrival) au départ (departure2),
+// moins 50 min de déjeuner au-delà de 6 h (withLunchBreak). La pause déjeuner n'est plus
+// pointée ; les anciens pointages de pause (departure / arrival2) sont ignorés, sauf
+// « departure » qui sert de départ quand le départ du soir manque (anciennes journées).
+// Tant que le départ n'est pas pointé, renvoie 0.
 export function computeWorkedHours(
   arrival: string | null,
   departure: string | null,
-  arrival2: string | null,
+  _arrival2: string | null,
   departure2: string | null
 ): number {
-  if (departure && arrival2) {
-    return calcHours(arrival, departure) + calcHours(arrival2, departure2);
-  }
   const end = departure2 || departure;
   if (arrival && end) {
     const span = calcHours(arrival, end);
