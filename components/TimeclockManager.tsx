@@ -176,9 +176,9 @@ export default function TimeclockManager() {
       d[e.type] = e.clocked_at;
     }
     let total = 0;
-    for (const d of byDate.values()) {
-      total += computeWorkedHours(d.arrival, d.departure, d.arrival2, d.departure2);
-    }
+    byDate.forEach((d, date) => {
+      total += computeWorkedHours(d.arrival, d.departure, d.arrival2, d.departure2, date);
+    });
     return total;
   }
  
@@ -278,16 +278,14 @@ export default function TimeclockManager() {
           {/* Table jour */}
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px]">
+              <table className="w-full min-w-[520px]">
                 <thead>
                   <tr className="bg-celadon-500 text-white text-sm">
                     <th className="py-3 px-4 text-left font-medium sticky left-0 bg-celadon-500 w-36">Employé</th>
                     <th className="py-3 px-3 text-center font-medium text-white/70 w-20" title="Horaire prévu">Prévu</th>
                     <th className="py-3 px-3 text-center font-medium w-20">Arrivée</th>
-                    <th className="py-3 px-3 text-center font-medium w-20">Début pause déj.</th>
                     <th className="py-3 px-3 text-center font-medium text-white/70 w-16">Écart</th>
-                    <th className="py-3 px-3 text-center font-medium w-20">Fin pause déj.</th>
-                    <th className="py-3 px-3 text-center font-medium w-20">Départ soir</th>
+                    <th className="py-3 px-3 text-center font-medium w-20">Départ</th>
                     <th className="py-3 px-3 text-center font-medium w-20">Total</th>
                     <th className="py-3 px-3 text-center font-medium text-white/60 w-20">Actions</th>
                   </tr>
@@ -331,14 +329,14 @@ export default function TimeclockManager() {
                     if (loading) {
                       return (
                         <tr>
-                          <td colSpan={9} className="py-12 text-center text-slate-400 text-sm">Chargement...</td>
+                          <td colSpan={7} className="py-12 text-center text-slate-400 text-sm">Chargement...</td>
                         </tr>
                       );
                     }
                     if (merged.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={9} className="py-12 text-center text-slate-400 text-sm">
+                          <td colSpan={7} className="py-12 text-center text-slate-400 text-sm">
                             Aucun pointage ni planning ce jour.
                           </td>
                         </tr>
@@ -388,22 +386,16 @@ export default function TimeclockManager() {
                             {arrDiff && <div className={clsx('text-[10px] mt-0.5', arrDiff.cls)}>{arrDiff.text}</div>}
                           </td>
                           <td className="px-3 py-2 text-center">
-                            <ClockCell time={row.departure} />
-                          </td>
-                          <td className="px-3 py-2 text-center">
                             {arrDiff
                               ? <span className={clsx('text-xs font-semibold', arrDiff.cls)}>{arrDiff.text}</span>
                               : <span className="text-slate-200 text-xs">—</span>}
                           </td>
                           <td className="px-3 py-2 text-center">
-                            <ClockCell time={row.arrival2} />
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <ClockCell time={row.departure2} />
+                            <ClockCell time={row.departure2 || row.departure} />
                           </td>
                           <td className="px-3 py-2 text-center">
                             {(() => {
-                              const worked = computeWorkedHours(row.arrival, row.departure, row.arrival2, row.departure2);
+                              const worked = computeWorkedHours(row.arrival, row.departure, row.arrival2, row.departure2, selectedDate);
                               return worked > 0
                                 ? <span className="text-sm font-bold text-slate-800">{fmtHours(worked)}</span>
                                 : <span className="text-xs text-slate-200">—</span>;
@@ -429,8 +421,8 @@ export default function TimeclockManager() {
                 <span className="text-orange-500 font-medium">Léger retard (5–15 min)</span>
                 <span className="text-red-600 font-medium">Retard (&gt;15 min)</span>
                 <span>Négatif = en avance</span>
-                <span className="text-slate-400">Les colonnes Matin / Début pause déj. / Fin pause déj. / Soir correspondent aux 4 pointages possibles</span>
-                <span className="text-slate-400">Temps travaillé : sans pause déjeuner pointée, 45 min de déjeuner sont retirées des journées de plus de 6 h</span>
+                <span className="text-slate-400">Deux pointages par jour : arrivée et départ (la pause déjeuner ne se pointe plus)</span>
+                <span className="text-slate-400">Total : temps de présence moins 50 min de déjeuner pour les journées de plus de 6 h</span>
               </div>
             )}
           </div>

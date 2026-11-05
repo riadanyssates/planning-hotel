@@ -27,40 +27,46 @@ export function calcHours(start: string | null, end: string | null): number {
  
 export function calcTotalHours(
   s1: string | null, e1: string | null,
-  s2: string | null, e2: string | null
+  s2: string | null, e2: string | null,
+  date?: string
 ): number {
   // deux créneaux = la coupure est déjà le déjeuner ; un seul créneau = on retire le déjeuner
   if (s2 && e2) return calcHours(s1, e1) + calcHours(s2, e2);
-  return withLunchBreak(calcHours(s1, e1));
+  return withLunchBreak(calcHours(s1, e1), date);
 }
 
-// Journée continue de plus de 6 h : 45 min de déjeuner retirées.
-export const LUNCH_BREAK_HOURS = 0.75;
+// Déjeuner retiré des journées de plus de 6 h (les journées courtes, 5 h par exemple, ne perdent rien) :
+// 50 min à partir de novembre 2026, 45 min avant (les mois déjà clôturés gardent leur calcul).
+export const LUNCH_RULE_50_FROM = '2026-11-01';
+export const LUNCH_BREAK_HOURS = 50 / 60;
+export const OLD_LUNCH_BREAK_HOURS = 0.75;
 export const LUNCH_BREAK_MIN_SESSION_HOURS = 6;
-export function withLunchBreak(span: number): number {
-  return span > LUNCH_BREAK_MIN_SESSION_HOURS ? span - LUNCH_BREAK_HOURS : span;
+const isOldRule = (date?: string) => !!date && date < LUNCH_RULE_50_FROM;
+export function withLunchBreak(span: number, date?: string): number {
+  if (span <= LUNCH_BREAK_MIN_SESSION_HOURS) return span;
+  return span - (isOldRule(date) ? OLD_LUNCH_BREAK_HOURS : LUNCH_BREAK_HOURS);
 }
- 
-// Computes hours actually worked from up to 4 timeclock punches on a single day:
-// arrival (morning in) / departure (lunch out) / arrival2 (lunch in) / departure2 (evening out).
-// - If both lunch punches are present: sum of (departure-arrival) + (departure2-arrival2).
-// - Otherwise (no lunch break punched): single continuous session from arrival to
-//   whichever of departure2/departure is the latest available end punch, minus
-//   45 min of lunch (withLunchBreak) when that session is longer than 6 h.
-// - If no end punch is available yet (still clocked in), returns 0.
+
+// Temps travaillé d'une journée.
+// À partir de novembre 2026 : présence de l'arrivée (arrival) au départ (departure2), moins
+// 50 min de déjeuner au-delà de 6 h. La pause déjeuner ne se pointe plus : un ancien pointage
+// « departure » sert de départ seulement si le départ du soir manque.
+// Avant novembre 2026 (ancien calcul, inchangé) : avec la pause pointée (departure + arrival2),
+// somme des deux plages ; sinon une seule plage moins 45 min au-delà de 6 h.
+// Tant que le départ n'est pas pointé, renvoie 0.
 export function computeWorkedHours(
   arrival: string | null,
   departure: string | null,
   arrival2: string | null,
-  departure2: string | null
+  departure2: string | null,
+  date?: string
 ): number {
-  if (departure && arrival2) {
+  if (isOldRule(date) && departure && arrival2) {
     return calcHours(arrival, departure) + calcHours(arrival2, departure2);
   }
   const end = departure2 || departure;
   if (arrival && end) {
-    const span = calcHours(arrival, end);
-    return withLunchBreak(span);
+    return withLunchBreak(calcHours(arrival, end), date);
   }
   return 0;
 }
@@ -178,7 +184,7 @@ export async function getWeekSchedules(
           exc.start_time as string | null, exc.end_time as string | null,
           exc.start_time2 as string | null, exc.end_time2 as string | null,
         );
-        const hours = calcTotalHours(s1, e1, s2, e2);
+        const hours = calcTotalHours(s1, e1, s2, e2, date);
         totalHours += hours;
         days[date] = {
           start_time: s1, end_time: e1, start_time2: s2, end_time2: e2,
@@ -191,7 +197,7 @@ export async function getWeekSchedules(
           tpl.start_time as string | null, tpl.end_time as string | null,
           tpl.start_time2 as string | null, tpl.end_time2 as string | null,
         );
-        const hours = calcTotalHours(s1, e1, s2, e2);
+        const hours = calcTotalHours(s1, e1, s2, e2, date);
         totalHours += hours;
         days[date] = {
           start_time: s1, end_time: e1, start_time2: s2, end_time2: e2,
@@ -257,12 +263,12 @@ export async function getMonthStats(
         if (exc) {
           hours = calcTotalHours(
             exc.start_time as string | null, exc.end_time as string | null,
-            exc.start_time2 as string | null, exc.end_time2 as string | null,
+            exc.start_time2 as string | null, exc.end_time2 as string | null, dateStr,
           );
         } else if (tpl) {
           hours = calcTotalHours(
             tpl.start_time as string | null, tpl.end_time as string | null,
-            tpl.start_time2 as string | null, tpl.end_time2 as string | null,
+            tpl.start_time2 as string | null, tpl.end_time2 as string | null, dateStr,
           );
         }
       }
@@ -332,7 +338,7 @@ export async function getEmployeeMonthSchedule(
         exc.start_time as string | null, exc.end_time as string | null,
         exc.start_time2 as string | null, exc.end_time2 as string | null,
       );
-      const hours = calcTotalHours(s1, e1, s2, e2);
+      const hours = calcTotalHours(s1, e1, s2, e2, dateStr);
       totalHours += hours;
       schedule[dateStr] = {
         start_time: s1, end_time: e1, start_time2: s2, end_time2: e2,
@@ -345,7 +351,7 @@ export async function getEmployeeMonthSchedule(
         tpl.start_time as string | null, tpl.end_time as string | null,
         tpl.start_time2 as string | null, tpl.end_time2 as string | null,
       );
-      const hours = calcTotalHours(s1, e1, s2, e2);
+      const hours = calcTotalHours(s1, e1, s2, e2, dateStr);
       totalHours += hours;
       schedule[dateStr] = {
         start_time: s1, end_time: e1, start_time2: s2, end_time2: e2,
@@ -419,7 +425,7 @@ export async function getAllEmployeesMonthSchedule(
             exc.start_time as string | null, exc.end_time as string | null,
             exc.start_time2 as string | null, exc.end_time2 as string | null,
           );
-          const hours = calcTotalHours(s1, e1, s2, e2);
+          const hours = calcTotalHours(s1, e1, s2, e2, dateStr);
           totalHours += hours;
           entry = {
             start_time: s1, end_time: e1, start_time2: s2, end_time2: e2,
@@ -432,7 +438,7 @@ export async function getAllEmployeesMonthSchedule(
             tpl.start_time as string | null, tpl.end_time as string | null,
             tpl.start_time2 as string | null, tpl.end_time2 as string | null,
           );
-          const hours = calcTotalHours(s1, e1, s2, e2);
+          const hours = calcTotalHours(s1, e1, s2, e2, dateStr);
           totalHours += hours;
           entry = {
             start_time: s1, end_time: e1, start_time2: s2, end_time2: e2,

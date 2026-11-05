@@ -47,11 +47,10 @@ export default function EmployeeGuide() {
             <Section title="1. Pointer chaque jour (onglet « Mon planning »)">
               <ul className="list-disc pl-5 space-y-1">
                 <li><b>Arrivée</b> : en arrivant au travail.</li>
-                <li><b>Début pause déj.</b> et <b>Retour</b> : quand tu pars déjeuner et quand tu reviens.</li>
-                <li><b>Départ soir</b> : en partant le soir.</li>
+                <li><b>Départ</b> : en partant à la fin de ta journée.</li>
               </ul>
               <p className="mt-1">L&apos;heure est prise automatiquement. Un pointage ne peut pas être modifié : en cas d&apos;erreur, préviens un responsable.</p>
-              <p className="mt-1">Si tu ne pointes pas la pause déjeuner, 45 minutes de déjeuner sont retirées des journées de plus de 6 heures.</p>
+              <p className="mt-1">La pause déjeuner ne se pointe pas : 50 minutes de déjeuner sont retirées des journées de plus de 6 heures. Les journées plus courtes (5 heures par exemple) ne perdent rien.</p>
             </Section>
 
             <Section title="2. Les retards">

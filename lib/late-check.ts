@@ -50,9 +50,9 @@ export async function checkLateArrivals(): Promise<LateAlert[]> {
     const day = days[today];
     if (!day || day.is_off || day.is_leave) continue;
 
+    // Seule l'arrivée est pointée : le retour de pause déjeuner ne l'est plus, donc pas de rappel
     const starts: [LateAlert['type'], string | null][] = [
       ['arrival', day.start_time],
-      ['arrival2', day.start_time2],
     ];
     for (const [type, start] of starts) {
       if (!start) continue;

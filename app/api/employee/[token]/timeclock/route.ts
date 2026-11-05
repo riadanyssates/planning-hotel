@@ -79,7 +79,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     args: [employee.id, date, type, clockedAt],
   });
  
-  const typeLabel = type === 'arrival' ? 'arrivée matin' : type === 'departure' ? 'départ déjeuner' : type === 'arrival2' ? 'retour déjeuner' : 'départ soir';
+  const typeLabel = type === 'arrival' ? 'arrivée matin' : type === 'departure' ? 'départ déjeuner' : type === 'arrival2' ? 'retour déjeuner' : 'départ';
   await db.execute({
     sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('timeclock', ?, ?)`,
     args: [employee.name, `${employee.name} a pointé son ${typeLabel} à ${clockedAt}`],
