@@ -70,7 +70,7 @@ export default function ManagerGuide() {
             <Section title="4. Pointages et retards">
               <ul className="list-disc pl-5 space-y-1">
                 <li><b>Pointages</b> : les 2 pointages du jour (arrivée et départ), le prévu, le temps travaillé et le total du mois avec l&apos;écart. Un pointage fait par erreur peut être supprimé.</li>
-                <li>La pause déjeuner ne se pointe plus : une journée de plus de 6 h compte 50 min de déjeuner en moins sur le temps de présence (arrivée → départ). Les journées plus courtes ne perdent rien.</li>
+                <li>La pause déjeuner ne se pointe plus : une journée de plus de 6 h compte 50 min de déjeuner en moins sur le temps de présence (arrivée → départ). Les journées plus courtes ne perdent rien. Cette règle s&apos;applique à partir du 1er novembre 2026 ; les mois précédents gardent l&apos;ancien calcul (pause pointée, ou 45 min).</li>
                 <li>Couleurs : <span className="text-green-600 font-medium">vert</span> à l&apos;heure, <span className="text-orange-500 font-medium">orange</span> léger retard, <span className="text-red-600 font-medium">rouge</span> retard.</li>
                 <li>🔔 <b>Cloche</b> : la <span className="text-red-600 font-semibold">pastille rouge</span> donne le nombre d&apos;employés en retard aujourd&apos;hui (10 min sans pointer, ou pointage avec 10 min de retard ou plus). Toucher la cloche pour voir le détail et les autres notifications (pointages, demandes de congé).</li>
               </ul>

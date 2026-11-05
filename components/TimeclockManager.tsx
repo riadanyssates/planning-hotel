@@ -176,9 +176,9 @@ export default function TimeclockManager() {
       d[e.type] = e.clocked_at;
     }
     let total = 0;
-    for (const d of byDate.values()) {
-      total += computeWorkedHours(d.arrival, d.departure, d.arrival2, d.departure2);
-    }
+    byDate.forEach((d, date) => {
+      total += computeWorkedHours(d.arrival, d.departure, d.arrival2, d.departure2, date);
+    });
     return total;
   }
  
@@ -395,7 +395,7 @@ export default function TimeclockManager() {
                           </td>
                           <td className="px-3 py-2 text-center">
                             {(() => {
-                              const worked = computeWorkedHours(row.arrival, row.departure, row.arrival2, row.departure2);
+                              const worked = computeWorkedHours(row.arrival, row.departure, row.arrival2, row.departure2, selectedDate);
                               return worked > 0
                                 ? <span className="text-sm font-bold text-slate-800">{fmtHours(worked)}</span>
                                 : <span className="text-xs text-slate-200">—</span>;

@@ -470,7 +470,7 @@ export default function EmployeePlanning({ token, embedded = false }: { token: s
             <div className="divide-y divide-slate-100">
               {sortedDates.map((dateStr) => {
                 const p = byDate.get(dateStr)!;
-                const worked = computeWorkedHours(p.arrival, p.departure, p.arrival2, p.departure2);
+                const worked = computeWorkedHours(p.arrival, p.departure, p.arrival2, p.departure2, dateStr);
                 const date = new Date(dateStr + 'T00:00:00');
                 return (
                   <div key={dateStr} className="flex items-center px-4 py-2.5 gap-3">
