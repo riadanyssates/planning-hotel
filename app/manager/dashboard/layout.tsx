@@ -5,7 +5,20 @@ import { redirect } from 'next/navigation';
 import LogoutButton from '@/components/LogoutButton';
 import NotificationBell from '@/components/NotificationBell';
 import ManagerGuide from '@/components/ManagerGuide';
+import ManagerPushSetup from '@/components/ManagerPushSetup';
 import { getDb } from '@/lib/db';
+import type { Metadata } from 'next';
+
+// Manifeste de l'espace manager : « Ajouter à l'écran d'accueil » (requis pour les notifications sur iPhone).
+// Un administrateur connecté par son lien personnel est renvoyé sur ce lien, qui le reconnecte tout seul.
+export async function generateMetadata(): Promise<Metadata> {
+  const session = await getManagerSession();
+  const start = session?.employeeToken ? `?start=${encodeURIComponent(`/planning/${session.employeeToken}`)}` : '';
+  return {
+    manifest: `/api/manager/manifest${start}`,
+    appleWebApp: { capable: true, title: 'Planning', statusBarStyle: 'default' },
+  };
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getManagerSession();
@@ -72,6 +85,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </nav>
         </div>
       </header>
+      <ManagerPushSetup />
       <main className="flex-1">{children}</main>
     </div>
   );

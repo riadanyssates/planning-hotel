@@ -4,6 +4,7 @@ import type { Employee } from '@/types';
 import { removeLeaveDayOnPunch, fillRestDayFromPunches } from '@/lib/leave-punch';
 import { getWeekSchedules } from '@/lib/schedule';
 import { LATE_AFTER_MIN } from '@/lib/late-check';
+import { notifyManagers } from '@/lib/notify';
 
 const toMin = (hhmm: string) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
  
@@ -95,10 +96,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         const late = toMin(String(clockedAt).slice(0, 5)) - toMin(start.slice(0, 5));
         if (late >= LATE_AFTER_MIN && late <= 12 * 60) {
           const label = type === 'arrival' ? 'arrivée' : 'retour de pause';
-          await db.execute({
-            sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('late', ?, ?)`,
-            args: [employee.name, `${employee.name} a pointé son ${label} à ${clockedAt} au lieu de ${start.slice(0, 5)} — ${late} min de retard`],
-          });
+          await notifyManagers(db, 'late', employee.name,
+            `${employee.name} a pointé son ${label} à ${clockedAt} au lieu de ${start.slice(0, 5)} — ${late} min de retard`,
+            { push: true });
         }
       }
     } catch { /* le pointage reste enregistré même si le contrôle du retard échoue */ }
@@ -109,10 +109,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     const removed = await removeLeaveDayOnPunch(db, Number(employee.id), date);
     if (removed > 0) {
       const [y, m, d] = String(date).split('-');
-      await db.execute({
-        sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('timeclock', ?, ?)`,
-        args: [employee.name, `${employee.name} a pointé le ${d}/${m}/${y} alors qu'il était en congé : ce jour a été retiré de ses congés`],
-      }).catch(() => {});
+      await notifyManagers(db, 'timeclock', employee.name,
+        `${employee.name} a pointé le ${d}/${m}/${y} alors qu'il était en congé : ce jour a été retiré de ses congés`,
+        { push: true });
     }
   } catch { /* le pointage reste enregistré même si la mise à jour du congé échoue */ }
 
@@ -121,10 +120,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     const rest = await fillRestDayFromPunches(db, Number(employee.id), date);
     if (rest === 'converted') {
       const [y, m, d] = String(date).split('-');
-      await db.execute({
-        sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('timeclock', ?, ?)`,
-        args: [employee.name, `${employee.name} a pointé le ${d}/${m}/${y}, jour de repos : ce jour passe en jour travaillé au planning`],
-      }).catch(() => {});
+      await notifyManagers(db, 'timeclock', employee.name,
+        `${employee.name} a pointé le ${d}/${m}/${y}, jour de repos : ce jour passe en jour travaillé au planning`,
+        { push: true });
     }
   } catch { /* le pointage reste enregistré même si la mise à jour du planning échoue */ }
 

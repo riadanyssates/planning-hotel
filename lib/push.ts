@@ -48,3 +48,29 @@ export async function sendPushToEmployee(db: Client, employeeId: number, payload
   }
   return sent;
 }
+
+// Envoie une notification sur tous les téléphones des responsables abonnés (espace manager).
+// Les abonnements expirés (404/410) sont supprimés. Renvoie le nombre d'envois réussis.
+export async function sendPushToManagers(db: Client, payload: PushPayload): Promise<number> {
+  if (!pushConfigured()) return 0;
+  const subs = await db.execute('SELECT id, endpoint, p256dh, auth FROM manager_push_subscriptions');
+  let sent = 0;
+  for (const s of subs.rows) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: String(s.endpoint), keys: { p256dh: String(s.p256dh), auth: String(s.auth) } },
+        JSON.stringify(payload),
+        { TTL: 6 * 60 * 60, urgency: 'normal' }
+      );
+      sent++;
+    } catch (e) {
+      const status = (e as { statusCode?: number }).statusCode;
+      if (status === 404 || status === 410) {
+        await db.execute({ sql: 'DELETE FROM manager_push_subscriptions WHERE id = ?', args: [s.id] });
+      } else {
+        console.error('manager push error:', status, e);
+      }
+    }
+  }
+  return sent;
+}

@@ -3,6 +3,7 @@ import { getDb } from './db';
 import { getWeekSchedules } from './schedule';
 import { moroccoNow } from './morocco-time';
 import { sendPushToEmployee } from './push';
+import { notifyManagers } from './notify';
 import type { Employee } from '@/types';
 
 // Rappel envoyé quand l'arrivée n'est pas pointée LATE_AFTER_MIN minutes après l'heure prévue.
@@ -73,14 +74,10 @@ export async function checkLateArrivals(): Promise<LateAlert[]> {
         url: `/planning/${employee.access_token}`,
         tag: `late-${today}-${type}`,
       });
-      await db.execute({
-        sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('late', ?, ?)`,
-        args: [
-          employee.name,
-          `${employee.name} n'a pas pointé (${label} prévue à ${start})` +
-            (pushed ? ' — rappel envoyé sur son téléphone' : ' — notifications non activées sur son téléphone'),
-        ],
-      });
+      await notifyManagers(db, 'late', employee.name,
+        `${employee.name} n'a pas pointé (${label} prévue à ${start})` +
+          (pushed ? ' — rappel envoyé sur son téléphone' : ' — notifications non activées sur son téléphone'),
+        { push: true });
       alerts.push({ employee: employee.name, type, scheduled: start, pushed });
     }
   }

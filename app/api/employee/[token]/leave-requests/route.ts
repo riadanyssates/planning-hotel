@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import type { Employee } from '@/types';
+import { notifyManagers } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ token: string }> };
 
@@ -57,10 +58,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   });
 
   const typeLabel = type === 'cm' ? 'congé maladie' : 'congés payés';
-  await db.execute({
-    sql: `INSERT INTO notifications (type, employee_name, message) VALUES ('leave_request', ?, ?)`,
-    args: [employee.name, `${employee.name} a soumis une demande de ${typeLabel} (${startDate} → ${endDate})`],
-  }).catch(() => {});
+  await notifyManagers(db, 'leave_request', employee.name,
+    `${employee.name} a soumis une demande de ${typeLabel} (${startDate} → ${endDate})`,
+    { push: true });
 
   return NextResponse.json(result.rows[0], { status: 201 });
 }
